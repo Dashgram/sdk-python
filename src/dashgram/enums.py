@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 class HandlerType(StrEnum):
     MESSAGE = "message"
     EDITED_MESSAGE = "edited_message"

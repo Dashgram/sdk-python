@@ -7,7 +7,6 @@ _MAPPING = {
     "aiogram": aiogram.object_to_dict,
     "telegram": telegram.object_to_dict,
     "telebot": telebot.object_to_dict,
-    "telethon": None,
 }
 
 def get_package(obj) -> typing.Optional[str]:
@@ -18,7 +17,9 @@ def get_package(obj) -> typing.Optional[str]:
 
 def determine_object_source(obj):
     package = get_package(obj)
-    return _MAPPING.get(package)
+    if package is None:
+        return None
+    return _MAPPING[package]
 
 
 def object_to_dict(obj, handler_type: typing.Optional[HandlerType] = None):
@@ -28,3 +29,12 @@ def object_to_dict(obj, handler_type: typing.Optional[HandlerType] = None):
 
     return conv(obj, handler_type)
 
+
+def resolve_framework() -> typing.Optional[str]:
+    if aiogram.aiogram:
+        return "Aiogram"
+    if telegram.telegram:
+        return "python-telegram-bot"
+    if telebot.telebot:
+        return "pyTelegramBotAPI"
+    return None

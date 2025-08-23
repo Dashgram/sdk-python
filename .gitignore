@@ -2,3 +2,4 @@
 /.idea/
 /dist/
 /src/dashgram.egg-info/
+**/__pycache__/

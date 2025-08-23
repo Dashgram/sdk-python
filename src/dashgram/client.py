@@ -1,7 +1,8 @@
 import typing
 import httpx
+import warnings
 
-from dashgram.integrations.base import object_to_dict
+from dashgram.integrations.base import object_to_dict, resolve_framework
 from dashgram.integrations import aiogram, telegram, telebot
 from dashgram.enums import HandlerType
 from dashgram.exceptions import InvalidCredentials, DashgramApiError
@@ -20,35 +21,66 @@ class Dashgram:
         self.api_url = f"{api_url}/{project_id}"
 
         if origin is None:
-            origin = "Python + Dashgram SDK"
+            framework = resolve_framework()
+            if framework is None:
+                origin = "Python + Dashgram SDK"
+            else:
+                origin = f"Python + Dashgram SDK + {framework}"
+
         self.origin = origin
 
         self._client = httpx.AsyncClient(base_url=self.api_url, headers={"Authorization": f"Bearer {access_key}"})
 
     @auto_async
-    async def track_event(self, event, handler_type: typing.Optional[HandlerType] = None):
-        if not isinstance(event, dict):
-            event = object_to_dict(event, handler_type)
-        else:
-            event = wrap_event(event, handler_type)
+    async def track_event(self, event, handler_type: typing.Optional[HandlerType] = None) -> bool:
+        try:
+            if not isinstance(event, dict):
+                event = object_to_dict(event, handler_type)
+            else:
+                event = wrap_event(event, handler_type)
 
-        req_data = {"origin": self.origin, "updates": [event]}
+            req_data = {"origin": self.origin, "updates": [event]}
 
-        resp = await self._client.post("track", json=req_data)
+            resp = await self._client.post("track", json=req_data)
 
-        if resp.status_code == 403:
-            raise InvalidCredentials
+            if resp.status_code == 403:
+                raise InvalidCredentials
 
-        resp_data = resp.json()
+            resp_data = resp.json()
 
-        if resp_data.get("status") != "success":
-            raise DashgramApiError(resp.status_code, resp_data.get("details"))
+            if resp_data.get("status") != "success":
+                raise DashgramApiError(resp.status_code, resp_data.get("details"))
+            
+            return True
+        except Exception as e:
+            warnings.warn(f"{type(e).__name__}: {e}")
+            return False
+            
+    @auto_async
+    async def invited_by(self, user_id: int, invited_by: int) -> bool:
+        try:
+            req_data = {"user_id": user_id, "invited_by": invited_by, "origin": self.origin}
+            
+            resp = await self._client.post("invited_by", json=req_data)
 
-    def bind_aiogram(self, dp: aiogram.Dispatcher):
+            if resp.status_code == 403:
+                raise InvalidCredentials
+            
+            resp_data = resp.json()
+            
+            if resp_data.get("status") != "success":
+                raise DashgramApiError(resp.status_code, resp_data.get("details"))
+            
+            return True
+        except Exception as e:
+            warnings.warn(f"{type(e).__name__}: {e}")
+            return False
+
+    def bind_aiogram(self, dp):
         aiogram.bind(self, dp)
 
-    def bind_telegram(self, app: telegram.Application, group: int = 1):
+    def bind_telegram(self, app, group: int = 1):
         telegram.bind(self, app, group)
 
-    def bind_telebot(self, bot: telebot.TeleBot):
+    def bind_telebot(self, bot):
         telebot.bind(self, bot)

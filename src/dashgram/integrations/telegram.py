@@ -1,34 +1,25 @@
 # python-telegram-bot integration
-import typing
-import warnings
-
 try:
-    from telegram.ext import BaseHandler, Application
-    from telegram import Update
+    from telegram.ext import BaseHandler
     telegram = True
 except ImportError:
     telegram = False
-    Application = typing.Any
-    Update = typing.Any
-    BaseHandler = object
+    BaseHandler = None
 
 
 def object_to_dict(obj, *args, **kwargs) -> dict:
     return obj.to_dict()
 
 
-def bind(sdk, app: Application, group: int = 1):
-    if not telegram:
+def bind(sdk, app, group: int = 1):
+    if not telegram or not BaseHandler:
         raise ImportError("python-telegram-bot is not installed")
 
     class UpdateHandler(BaseHandler):
-        def check_update(self, update: Update):
+        def check_update(self, update):
             return True
 
-    async def track_update(update: Update, context) -> None:
-        try:
-            await sdk.track_event(update)
-        except Exception as exc:
-            warnings.warn(f"{type(exc).__name__}: {exc}")
+    async def track_update(update, context) -> None:
+        await sdk.track_event(update)
 
     app.add_handler(UpdateHandler(track_update, block=False), group=group)

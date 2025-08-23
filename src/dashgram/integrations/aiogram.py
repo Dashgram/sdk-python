@@ -1,6 +1,5 @@
 # aiogram integration
 import typing
-import warnings
 
 from dashgram.enums import HandlerType
 
@@ -16,7 +15,7 @@ except ImportError as e:
 
 
 def object_to_dict(obj, handler_type: typing.Optional[HandlerType] = None) -> dict:
-    if not aiogram:
+    if not aiogram or not deserialize_telegram_object_to_python or not types:
         raise ImportError("aiogram is not installed")
 
     if not isinstance(obj, types.Update):
@@ -47,18 +46,15 @@ def rename_key(d, old_key, new_key):
     return nd
 
 
-def bind(sdk, dp: Dispatcher):
+def bind(sdk, dp):
     if not aiogram:
         raise ImportError("aiogram is not installed")
 
     @dp.update.outer_middleware()
     async def track_event_middleware(
             handler,
-            event: types.Update,
+            event,
             data
     ):
-        try:
-            await sdk.track_event(event)
-        except Exception as exc:
-            warnings.warn(f"{type(exc).__name__}: {exc}")
+        await sdk.track_event(event)
         return await handler(event, data)
