@@ -31,56 +31,48 @@ class Dashgram:
 
         self._client = httpx.AsyncClient(base_url=self.api_url, headers={"Authorization": f"Bearer {access_key}"})
 
-    @auto_async
-    async def track_event(self, event, handler_type: typing.Optional[HandlerType] = None) -> bool:
+    async def _request(self, url: str, json: typing.Optional[typing.Dict[str, typing.Any]] = None, suppress_exceptions: bool = True) -> bool:
         try:
-            if not isinstance(event, dict):
-                event = object_to_dict(event, handler_type)
-            else:
-                event = wrap_event(event, handler_type)
-
-            req_data = {"origin": self.origin, "updates": [event]}
-
-            resp = await self._client.post("track", json=req_data)
-
-            if resp.status_code == 403:
-                raise InvalidCredentials
-
-            resp_data = resp.json()
-
-            if resp_data.get("status") != "success":
-                raise DashgramApiError(resp.status_code, resp_data.get("details"))
+            resp = await self._client.post(url, json=json)
             
-            return True
-        except Exception as e:
-            warnings.warn(f"{type(e).__name__}: {e}")
-            return False
-            
-    @auto_async
-    async def invited_by(self, user_id: int, invited_by: int) -> bool:
-        try:
-            req_data = {"user_id": user_id, "invited_by": invited_by, "origin": self.origin}
-            
-            resp = await self._client.post("invited_by", json=req_data)
-
             if resp.status_code == 403:
                 raise InvalidCredentials
             
             resp_data = resp.json()
             
-            if resp_data.get("status") != "success":
+            if resp.status_code != 200 or resp_data.get("status") != "success":
                 raise DashgramApiError(resp.status_code, resp_data.get("details"))
             
             return True
         except Exception as e:
+            if not suppress_exceptions:
+                raise e
             warnings.warn(f"{type(e).__name__}: {e}")
             return False
+
+    @auto_async
+    async def track_event(self, event, handler_type: typing.Optional[HandlerType] = None, suppress_exceptions: bool = True) -> bool:
+        if not isinstance(event, dict):
+            event = object_to_dict(event, handler_type)
+        else:
+            event = wrap_event(event, handler_type)
+
+        req_data = {"origin": self.origin, "updates": [event]}
+
+        return await self._request("track", json=req_data, suppress_exceptions=suppress_exceptions)
+            
+        
+    @auto_async
+    async def invited_by(self, user_id: int, invited_by: int, suppress_exceptions: bool = True) -> bool:
+        req_data = {"user_id": user_id, "invited_by": invited_by, "origin": self.origin}
+            
+        return await self._request("invited_by", json=req_data, suppress_exceptions=suppress_exceptions)
 
     def bind_aiogram(self, dp):
         aiogram.bind(self, dp)
 
-    def bind_telegram(self, app, group: int = 1):
-        telegram.bind(self, app, group)
+    def bind_telegram(self, app, group: int = -1, block: bool = False):
+        telegram.bind(self, app, group, block)
 
     def bind_telebot(self, bot):
         telebot.bind(self, bot)

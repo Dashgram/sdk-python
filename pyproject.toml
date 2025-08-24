@@ -30,7 +30,8 @@ where = ["src"]
 dev = [
     "aiogram>=3.13.1",
     "pytelegrambotapi>=4.23.0",
+    "python-telegram-bot>=21.6",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.24.0",
-    "python-telegram-bot>=21.6",
+    "pytest-mock>=3.14.1",
 ]
