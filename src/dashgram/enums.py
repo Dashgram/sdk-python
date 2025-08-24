@@ -1,7 +1,22 @@
+"""
+Dashgram SDK Enums Module.
+
+This module contains enumerations used throughout the Dashgram SDK,
+primarily for defining Telegram update types and event handlers.
+"""
+
 from enum import StrEnum
 
 
 class HandlerType(StrEnum):
+    """
+    Enumeration of all supported Telegram update types.
+    
+    This enum defines all the different types of Telegram updates that can be
+    tracked by the Dashgram SDK. Each value corresponds to a specific Telegram
+    Bot API update type.
+    """
+    
     MESSAGE = "message"
     EDITED_MESSAGE = "edited_message"
     CHANNEL_POST = "channel_post"
@@ -27,5 +42,15 @@ class HandlerType(StrEnum):
     REMOVED_CHAT_BOOST = "removed_chat_boost"
 
     @classmethod
-    def all_types(cls):
+    def all_types(cls) -> list[str]:
+        """
+        Get a list of all handler type values.
+        
+        Returns:
+            A list containing all the string values of the HandlerType enum.
+        
+        Example:
+            >>> HandlerType.all_types()
+            ['message', 'edited_message', 'channel_post', ...]
+        """
         return [e.value for e in cls]
