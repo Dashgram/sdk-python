@@ -1,5 +1,7 @@
 /.venv/
 /.idea/
+/.pytest_cache/
 /dist/
+/build/
 /src/dashgram.egg-info/
 **/__pycache__/

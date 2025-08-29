@@ -5,10 +5,10 @@ This module contains enumerations used throughout the Dashgram SDK,
 primarily for defining Telegram update types and event handlers.
 """
 
-from enum import StrEnum
+from enum import Enum
 
 
-class HandlerType(StrEnum):
+class HandlerType(Enum):
     """
     Enumeration of all supported Telegram update types.
     
@@ -40,6 +40,9 @@ class HandlerType(StrEnum):
     CHAT_JOIN_REQUEST = "chat_join_request"
     CHAT_BOOST = "chat_boost"
     REMOVED_CHAT_BOOST = "removed_chat_boost"
+
+    def __str__(self) -> str:
+        return self.value
 
     @classmethod
     def all_types(cls) -> list[str]:
