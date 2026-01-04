@@ -2,7 +2,7 @@ import pytest
 
 from unittest.mock import Mock
 
-from dashgram import Dashgram
+from dashgram import Dashgram, __version__
 from dashgram.enums import HandlerType
 from dashgram.exceptions import InvalidCredentials, DashgramApiError
 
@@ -15,7 +15,7 @@ def test_client_initialization_with_required_params(mocker):
     assert sdk.project_id == 123
     assert sdk.access_key == "test"
     assert sdk.api_url == "https://api.dashgram.io/v1/123"
-    assert sdk.origin == "Python + Dashgram SDK"
+    assert sdk.origin == f"Python + Dashgram SDK v{__version__}"
 
 
 def test_client_initialization_with_custom_api_url():
@@ -34,7 +34,7 @@ def test_client_initialization_with_framework_detection(mocker):
     """Test client initialization with framework auto-detection"""
     mocker.patch("dashgram.client.resolve_framework", return_value="test")
     sdk = Dashgram(project_id=123, access_key="test")
-    assert sdk.origin == "Python + Dashgram SDK + test"
+    assert sdk.origin == f"Python + Dashgram SDK v{__version__} + test"
 
 
 def test_client_httpx_client_initialization():
