@@ -64,11 +64,13 @@ class Dashgram:
         self.api_url = f"{api_url}/{project_id}"
 
         if origin is None:
+            from dashgram import __version__
+            
             framework = resolve_framework()
             if framework is None:
-                origin = "Python + Dashgram SDK"
+                origin = f"Python + Dashgram SDK v{__version__}"
             else:
-                origin = f"Python + Dashgram SDK + {framework}"
+                origin = f"Python + Dashgram SDK v{__version__} + {framework}"
 
         self.origin = origin
         
