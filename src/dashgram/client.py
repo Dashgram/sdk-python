@@ -105,7 +105,7 @@ class Dashgram:
             
             resp_data = resp.json()
             
-            if 200 <= resp.status_code < 300 or resp_data.get("status") != "success":
+            if not (200 <= resp.status_code < 300) or resp_data.get("status") != "success":
                 raise DashgramApiError(resp.status_code, resp_data.get("details"))
             
             return True

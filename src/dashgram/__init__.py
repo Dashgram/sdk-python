@@ -34,4 +34,4 @@ from .enums import HandlerType
 
 __all__ = ["Dashgram", "HandlerType"]
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
