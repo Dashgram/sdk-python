@@ -197,6 +197,83 @@ class Dashgram:
             
         return await self._request("invited_by", json=req_data, suppress_exceptions=suppress_exceptions)
 
+    @auto_async
+    async def payment(
+        self,
+        user_id: int,
+        payment_id: str,
+        currency: str,
+        amount: float,
+        invoice_payload: typing.Optional[str] = None,
+        event_time: typing.Optional[int] = None,
+        suppress_exceptions: typing.Optional[bool] = None,
+    ) -> bool:
+        """
+        Track a manual payment.
+
+        Args:
+            user_id: Telegram user ID associated with the payment
+            payment_id: Unique payment or charge identifier
+            currency: Payment currency (XTR/stars, TON, USD, or USDT)
+            amount: Payment amount in full decimal units
+            invoice_payload: Optional invoice payload associated with the payment
+            event_time: Optional Unix timestamp for when the payment happened
+            suppress_exceptions: Whether to suppress exceptions and return False
+
+        Returns:
+            True if the payment was tracked successfully, False otherwise
+        """
+        req_data: typing.Dict[str, typing.Any] = {
+            "user_id": user_id,
+            "payment_id": payment_id,
+            "currency": currency,
+            "amount": amount,
+            "origin": self.origin,
+        }
+        if invoice_payload is not None:
+            req_data["invoice_payload"] = invoice_payload
+        if event_time is not None:
+            req_data["event_time"] = event_time
+
+        return await self._request("payment", json=req_data, suppress_exceptions=suppress_exceptions)
+
+    @auto_async
+    async def refund_payment(
+        self,
+        payment_id: str,
+        currency: str,
+        amount: float,
+        invoice_payload: typing.Optional[str] = None,
+        event_time: typing.Optional[int] = None,
+        suppress_exceptions: typing.Optional[bool] = None,
+    ) -> bool:
+        """
+        Track a payment refund.
+
+        Args:
+            payment_id: Unique payment or charge identifier being refunded
+            currency: Refund currency (XTR/stars, TON, USD, or USDT)
+            amount: Refund amount in full decimal units
+            invoice_payload: Optional invoice payload associated with the payment
+            event_time: Optional Unix timestamp for when the refund happened
+            suppress_exceptions: Whether to suppress exceptions and return False
+
+        Returns:
+            True if the refund was tracked successfully, False otherwise
+        """
+        req_data: typing.Dict[str, typing.Any] = {
+            "payment_id": payment_id,
+            "currency": currency,
+            "amount": amount,
+            "origin": self.origin,
+        }
+        if invoice_payload is not None:
+            req_data["invoice_payload"] = invoice_payload
+        if event_time is not None:
+            req_data["event_time"] = event_time
+
+        return await self._request("payment/refund", json=req_data, suppress_exceptions=suppress_exceptions)
+
     def bind_aiogram(self, dp) -> None:
         """
         Bind the SDK to an aiogram dispatcher for automatic event tracking.

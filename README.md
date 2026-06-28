@@ -14,6 +14,7 @@ A Python SDK for Dashgram - Analytics and tracking for Telegram bots with seamle
 - ⚡ **Async Support** - Full async/await support with automatic sync wrapper
 - 🛡️ **Error Handling** - Robust error handling with configurable exception suppression
 - 🎯 **Invitation Tracking** - Track user invitations and referrals
+- 💳 **Payment Tracking** - Track manual payments and refunds
 
 ## Supported Frameworks
 
@@ -48,6 +49,21 @@ sdk.track_event(event_data, HandlerType.MESSAGE)
 
 # Mark user as invited by another user (for referral analytics)
 sdk.invited_by(user_id, inviter_user_id)
+
+# Track manual payments and refunds
+sdk.payment(
+    user_id=123456,
+    payment_id="unique-charge-id",
+    currency="XTR",
+    amount=100.0,
+    invoice_payload="product_abc",
+)
+sdk.refund_payment(
+    payment_id="unique-charge-id",
+    currency="XTR",
+    amount=100.0,
+    invoice_payload="product_abc",
+)
 ```
 
 The `event_data` parameter should contain the update data in raw Telegram API format, or the corresponding update/message object from your framework (aiogram, python-telegram-bot, or pyTelegramBotAPI).
@@ -198,6 +214,58 @@ Track user invitation/referral for analytics purposes.
 **Parameters:**
 - `user_id` - ID of the invited user
 - `invited_by` - ID of the user who sent the invitation
+- `suppress_exceptions` - Whether to suppress exceptions (default: True)
+
+**Returns:** `bool` - True if successful, False otherwise
+
+##### payment()
+
+```python
+async def payment(
+    user_id: int,
+    payment_id: str,
+    currency: str,
+    amount: float,
+    invoice_payload: Optional[str] = None,
+    event_time: Optional[int] = None,
+    suppress_exceptions: bool = True
+) -> bool
+```
+
+Track a manual payment.
+
+**Parameters:**
+- `user_id` - Telegram user ID associated with the payment
+- `payment_id` - Unique payment or charge identifier
+- `currency` - Payment currency: `XTR`/`stars`, `TON`, `USD`, or `USDT` (case-insensitive)
+- `amount` - Payment amount in full decimal units, for example `1.5` for 1.5 TON or `100` for 100 stars
+- `invoice_payload` - Optional invoice payload associated with the payment
+- `event_time` - Optional Unix timestamp; omit to use server time
+- `suppress_exceptions` - Whether to suppress exceptions (default: True)
+
+**Returns:** `bool` - True if successful, False otherwise
+
+##### refund_payment()
+
+```python
+async def refund_payment(
+    payment_id: str,
+    currency: str,
+    amount: float,
+    invoice_payload: Optional[str] = None,
+    event_time: Optional[int] = None,
+    suppress_exceptions: bool = True
+) -> bool
+```
+
+Track a payment refund. Uses the same currency, amount, payload, and event time rules as `payment()`.
+
+**Parameters:**
+- `payment_id` - Unique payment or charge identifier being refunded
+- `currency` - Refund currency: `XTR`/`stars`, `TON`, `USD`, or `USDT` (case-insensitive)
+- `amount` - Refund amount in full decimal units
+- `invoice_payload` - Optional invoice payload associated with the payment
+- `event_time` - Optional Unix timestamp; omit to use server time
 - `suppress_exceptions` - Whether to suppress exceptions (default: True)
 
 **Returns:** `bool` - True if successful, False otherwise

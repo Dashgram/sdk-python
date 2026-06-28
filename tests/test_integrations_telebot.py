@@ -9,8 +9,11 @@ import telebot.async_telebot
 
 
 @pytest.fixture
-def sample_telebot_update(sample_telebot_message):
-    return telebot.types.Update(update_id=1, message=sample_telebot_message, edited_message=None, channel_post=None, edited_channel_post=None, inline_query=None, chosen_inline_result=None, callback_query=None, shipping_query=None, pre_checkout_query=None, poll=None, poll_answer=None, my_chat_member=None, chat_member=None, chat_join_request=None, message_reaction=None, message_reaction_count=None, removed_chat_boost=None, chat_boost=None, business_connection=None, business_message=None, edited_business_message=None, deleted_business_messages=None, purchased_paid_media=None)
+def sample_telebot_update(sample_message_dict):
+    return telebot.types.Update.de_json({
+        "update_id": 1,
+        "message": sample_message_dict,
+    })
 
 
 def test_object_to_dict_with_update_object(sample_message_dict, sample_telebot_update):
@@ -113,7 +116,6 @@ async def test_track_middleware_async(dashgram_client, sample_telebot_message):
 def test_full_telebot_sync_integration_workflow(dashgram_client, sample_telebot_update, sample_telebot_message):
     """Test complete telebot integration workflow"""
     dashgram_client.track_event = Mock()
-    print(dashgram_client.track_event)
     mock_handler = Mock()
     
     # Create sync bot
@@ -129,9 +131,9 @@ def test_full_telebot_sync_integration_workflow(dashgram_client, sample_telebot_
     
     bot.process_new_updates([sample_telebot_update])
     
-    dashgram_client.track_event.assert_called_once_with(sample_telebot_message, HandlerType.MESSAGE)
+    dashgram_client.track_event.assert_called_once_with(sample_telebot_update.message, HandlerType.MESSAGE)
     
-    mock_handler.assert_called_once_with(sample_telebot_message)
+    mock_handler.assert_called_once_with(sample_telebot_update.message)
     
 
 @pytest.mark.asyncio
@@ -153,7 +155,7 @@ async def test_full_telebot_async_integration_workflow(dashgram_client, sample_t
     
     await bot.process_new_updates([sample_telebot_update])
     
-    dashgram_client.track_event.assert_awaited_once_with(sample_telebot_message, HandlerType.MESSAGE)
+    dashgram_client.track_event.assert_awaited_once_with(sample_telebot_update.message, HandlerType.MESSAGE)
     
     mock_handler.assert_awaited_once()
     assert mock_handler.call_args[0][0] == sample_telebot_update.message

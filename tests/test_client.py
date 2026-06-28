@@ -124,6 +124,122 @@ async def test_invited_by(mock_httpx_client, dashgram_client):
     )
 
 
+@pytest.mark.asyncio
+async def test_payment(mock_httpx_client, dashgram_client):
+    """Test payment with successful API response"""
+    res = await dashgram_client.payment(
+        user_id=123456,
+        payment_id="unique-charge-id",
+        currency="XTR",
+        amount=100.0,
+        invoice_payload="product_abc",
+        event_time=1700000000,
+    )
+    assert res is True
+
+    mock_httpx_client.post.assert_awaited_once_with(
+        "payment",
+        json={
+            "user_id": 123456,
+            "payment_id": "unique-charge-id",
+            "currency": "XTR",
+            "amount": 100.0,
+            "invoice_payload": "product_abc",
+            "event_time": 1700000000,
+            "origin": "Python + Dashgram SDK",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_payment_omits_optional_fields(mock_httpx_client, dashgram_client):
+    """Test payment omits optional fields when not provided"""
+    res = await dashgram_client.payment(
+        user_id=123456,
+        payment_id="unique-charge-id",
+        currency="TON",
+        amount=1.5,
+    )
+    assert res is True
+
+    mock_httpx_client.post.assert_awaited_once_with(
+        "payment",
+        json={
+            "user_id": 123456,
+            "payment_id": "unique-charge-id",
+            "currency": "TON",
+            "amount": 1.5,
+            "origin": "Python + Dashgram SDK",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_refund_payment(mock_httpx_client, dashgram_client):
+    """Test refund_payment with successful API response"""
+    res = await dashgram_client.refund_payment(
+        payment_id="unique-charge-id",
+        currency="stars",
+        amount=100.0,
+        invoice_payload="product_abc",
+        event_time=1700000000,
+    )
+    assert res is True
+
+    mock_httpx_client.post.assert_awaited_once_with(
+        "payment/refund",
+        json={
+            "payment_id": "unique-charge-id",
+            "currency": "stars",
+            "amount": 100.0,
+            "invoice_payload": "product_abc",
+            "event_time": 1700000000,
+            "origin": "Python + Dashgram SDK",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_refund_payment_omits_optional_fields(mock_httpx_client, dashgram_client):
+    """Test refund_payment omits optional fields when not provided"""
+    res = await dashgram_client.refund_payment(
+        payment_id="unique-charge-id",
+        currency="USD",
+        amount=0.99,
+    )
+    assert res is True
+
+    mock_httpx_client.post.assert_awaited_once_with(
+        "payment/refund",
+        json={
+            "payment_id": "unique-charge-id",
+            "currency": "USD",
+            "amount": 0.99,
+            "origin": "Python + Dashgram SDK",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_payment_unsupported_currency_error(dashgram_client):
+    """Test payment propagates unsupported currency API errors"""
+    dashgram_client._client.post.side_effect = [
+        Mock(status_code=400, json=Mock(return_value={"status": "failed", "details": "Unsupported currency"}))
+    ]
+
+    with pytest.raises(DashgramApiError) as exc_info:
+        await dashgram_client.payment(
+            user_id=123456,
+            payment_id="unique-charge-id",
+            currency="EUR",
+            amount=100.0,
+            suppress_exceptions=False,
+        )
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.details == "Unsupported currency"
+
+
 def test_client_bind_aiogram(dashgram_client, mocker):
     """Test client bind_aiogram function"""
     mock_bind = mocker.patch("dashgram.client.aiogram.bind")
